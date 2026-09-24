@@ -80,13 +80,13 @@ flowchart LR
 
 Un segundo flujo de n8n conecta el stack con **Telegram** para consultar y recibir avisos sin abrir ningún panel:
 
-- **Comandos:** un nodo *Telegram Trigger* recibe los mensajes y un enrutador de comandos decide la respuesta. `/estado` devuelve un resumen con las métricas de Zabbix, y otra ruta envía el enlace al dashboard de Grafana.
+- **Menú con botones:** el comando `/panel` muestra un mensaje con dos botones, **Estado** y **Dashboard**, para no tener que escribir comandos a mano. *Estado* devuelve un resumen con las métricas de Zabbix y *Dashboard* abre el panel de Grafana. Por debajo, un nodo *Telegram Trigger* recibe los mensajes y un enrutador de comandos decide la respuesta.
 - **Ejecuciones programadas:** un reporte diario y otro cada 5 minutos consultan la API de Zabbix (login + métricas), calculan el uso de recursos y lo comparan con un umbral crítico. Si se supera, se envía el resumen al chat.
 - **Alertas de servicios globales:** el flujo del radar avisa por Telegram cuando detecta un incidente en algún proveedor (por ejemplo, un incidente activo en Cloudflare).
 
 ```mermaid
 flowchart LR
-    T[Telegram<br/>comando /estado] --> R[Enrutador<br/>de comandos]
+    T[Telegram<br/>/panel + botones] --> R[Enrutador<br/>de comandos]
     S[Reporte diario<br/>y cada 5 min] --> Z[Zabbix API<br/>login + métricas]
     R --> Z
     Z --> C[Cálculo de métricas<br/>y umbral]
@@ -111,7 +111,7 @@ flowchart LR
 ## ✨ Características clave
 
 - **Agregación multi-fuente** en un único endpoint JSON.
-- **Bot de Telegram:** consulta de métricas con `/estado` y alertas automáticas.
+- **Bot de Telegram:** menú `/panel` con botones (Estado y Dashboard) y alertas automáticas.
 - **Frontend sin frameworks:** HTML5, CSS3 y JavaScript nativo asíncrono.
 - **PWA instalable:** `manifest.json`, `service-worker.js` e iconos.
 - **Sin puertos abiertos en el router:** todo el acceso externo entra por túneles Cloudflare.
