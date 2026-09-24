@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar de Caídas Globales</title>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: #fff; }
+        .banner { background: #1e1e1e; border-left: 5px solid #4CAF50; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .tarjeta { display: flex; justify-content: space-between; background: #1e1e1e; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #2a2a2a; }
+    </style>
+</head>
+<body>
+    <h1>Radar de Estado Global</h1>
+    <div id="estado-global" class="banner">Cargando estado...</div>
+    <div id="lista-servicios"></div>
+    <script>
+const WEBHOOK_URL = 'https://closely-atom-identification-minority.trycloudflare.com/webhook/estado-global';
+
+async function cargarRadar() {
+    try {
+        const respuesta = await fetch(WEBHOOK_URL);
+        const datos = await respuesta.json();
+        const banner = document.getElementById('estado-global');
+        banner.innerText = datos.mensaje || 'Estado actualizado';
+        banner.style.borderLeftColor = datos.hayAlertas ? '#ff9800' : '#4CAF50';
+        const contenedor = document.getElementById('lista-servicios');
+        contenedor.innerHTML = '';
+
+        const lista = datos.servicios || [];
+        lista.forEach(s => {
+            contenedor.innerHTML += `
+                <div class="tarjeta">
+                    <strong>${s.nombre}</strong>
+                    <span>${s.estado}</span>
+                </div>
+            `;
+        });
+    } catch (e) {
+        document.getElementById('estado-global').innerText = '⚠️ Error al conectar con n8n';
+    }
+}
+cargarRadar();
+</script>
+</body>
+</html>

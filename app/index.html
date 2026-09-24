@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Microsyscom Panel</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f1f5f9;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, system-ui, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    min-height: 100vh;
+  }
+  header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #334155;
+  }
+  header h1 { font-size: 20px; }
+  .tabs {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid #334155;
+    z-index: 10;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 14px 4px;
+    font-size: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+  .tab.active { color: var(--accent); }
+  .screen { display: none; padding: 16px; padding-bottom: 80px; }
+  .screen.active { display: block; }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    margin-bottom: 12px;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: left;
+    text-decoration: none;
+  }
+  .btn span.emoji { font-size: 22px; margin-right: 10px; }
+  iframe {
+    width: 100%;
+    height: calc(100vh - 140px);
+    border: none;
+    border-radius: 12px;
+  }
+  .status-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .loading { text-align: center; padding: 40px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<header><h1>🖥️ Microsyscom Panel</h1></header>
+
+<div id="inicio" class="screen active">
+  <a class="btn" href="https://disciplines-glass-browsing-apparent.trycloudflare.com" target="_blank"><span class="emoji">📊</span>Zabbix</a>
+  <a class="btn" href="https://democracy-wing-nearly-oecd.trycloudflare.com" target="_blank"><span class="emoji">📈</span>Grafana</a>
+  <a class="btn" href="https://closely-atom-identification-minority.trycloudflare.com" target="_blank"><span class="emoji">⚙️</span>n8n</a>
+  <button class="btn" onclick="mostrarPantalla('estado')"><span class="emoji">🌐</span>Estado Global</button>
+
+  <!-- Vista previa directa del dashboard DSM -->
+  <div style="margin-top: 15px; width: 100%; height: 65vh;">
+    <iframe src="https://democracy-wing-nearly-oecd.trycloudflare.com/d/adppndj/dsm?orgId=1&kiosk" style="width: 100%; height: 100%; border: none; border-radius: 8px;"></iframe>
+  </div>
+</div>
+
+<div id="dashboard" class="screen">
+  <iframe src="https://democracy-wing-nearly-oecd.trycloudflare.com/d/adppndj/dsm?orgId=1&kiosk"></iframe>
+</div>
+
+<div id="estado" class="screen">
+  <div id="estadoContenido" class="loading">Cargando estado...</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="mostrarPantalla('inicio')">🏠 Inicio</button>
+  <button class="tab" onclick="mostrarPantalla('dashboard')">📈 Dashboard</button>
+  <button class="tab" onclick="mostrarPantalla('estado')">🌐 Estado</button>
+</div>
+
+<script>
+function mostrarPantalla(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.closest('.tab, .btn')?.classList?.add('active');
+  document.querySelectorAll('.tab')[id === 'inicio' ? 0 : id === 'dashboard' ? 1 : 2].classList.add('active');
+
+  if (id === 'estado') cargarEstadoGlobal();
+}
+
+
+async function cargarEstadoGlobal() {
+  const cont = document.getElementById('estadoContenido');
+  cont.className = '';
+  cont.innerHTML = '<iframe src="radar.html" style="width: 100%; height: 75vh; border: none; background: transparent;"></iframe>';
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
