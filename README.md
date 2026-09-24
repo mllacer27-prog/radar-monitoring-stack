@@ -10,7 +10,24 @@
 ![Nginx](https://img.shields.io/badge/Nginx-Alpine-009639?logo=nginx&logoColor=white)
 ![Bash](https://img.shields.io/badge/Bash-Scripting-4EAA25?logo=gnubash&logoColor=white)
 
-<!-- ![Captura del panel](docs/panel.png) -->
+
+## 📸 Capturas
+
+### Panel principal y radar
+
+| Vista principal | Radar de estado global |
+|---|---|
+| ![Vista principal](docs/Vista_Principal.png) | ![Radar](docs/Radar.png) |
+
+### Monitorización
+
+![Dashboard de Grafana](docs/Dashboard_Grafana.png)
+
+### Automatización en n8n
+
+| Workflow del radar | Respuesta al webhook | Workflow de alertas |
+|---|---|---|
+| ![Workflow del radar](docs/Workflow_Radar.png) | ![Respond to Webhook](docs/Respond_to_Webhook.png) | ![Workflow de alertas](docs/Workflow_Alertas.png) |
 
 ## 🎯 ¿Qué es?
 
