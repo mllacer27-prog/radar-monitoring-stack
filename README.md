@@ -1,181 +1,63 @@
-# 📡 Radar de Estado de Servicios Cloud + Stack de Monitorización
+# 🌐 Global Status Radar & n8n Monitoring Panel
 
 > Stack *self-hosted* en un Mini PC con Ubuntu que combina **automatización (n8n)**, **monitorización (Zabbix + Grafana)** y un **panel web PWA**, expuesto con **Cloudflare Tunnels** sin abrir puertos en el router.
 
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-Automation-EA4B71?logo=n8n&logoColor=white)
-![Zabbix](https://img.shields.io/badge/Zabbix-6.4-D40000?logo=zabbix&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=grafana&logoColor=white)
-![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnels-F38020?logo=cloudflare&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-Alpine-009639?logo=nginx&logoColor=white)
-![Bash](https://img.shields.io/badge/Bash-Scripting-4EAA25?logo=gnubash&logoColor=white)
+![Zabbix](https://img.shields.io/badge/Zabbix-Monitoring-EE0000?logo=Zabbix&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboards-F46800?logo=Grafana&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containers-2496ED?logo=Docker&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnels-F38020?logo=Cloudflare&logoColor=white)
 
+---
 
-## 📸 Capturas
+## 📌 Stack *Self-Hosted* de Monitorización y Automatización
 
-### Panel principal y radar
+Este repositorio contiene la arquitectura completa implementada en un Mini PC con Ubuntu (`~/stack`). Su objetivo es servir como un panel centralizado de control y observabilidad en tiempo real, totalmente autónomo, seguro y desplegado mediante contenedores Docker.
 
-| Vista principal | Radar de estado global |
-|---|---|
-| ![Vista principal](docs/Vista_Principal.png) | ![Radar](docs/Radar.png) |
+### 📊 Desglose de Componentes Principales
+- **n8n:** Orquestador de flujos de trabajo (*workflow automation*). Se encarga de consultar periódicamente APIs externas de estatus, procesar feeds RSS de telecomunicaciones y gestionar las reglas de alerta.
+- **Zabbix:** Monitorización robusta a nivel de infraestructura, recursos de sistema del Mini PC y métricas operativas.
+- **Grafana:** Paneles de visualización avanzados y métricas en tiempo real. Configurado con acceso anónimo de solo lectura (*Viewer*) para permitir su incrustación directa y fluida dentro del panel web del proyecto.
+- **Panel Web PWA (`app/`):** Dashboard ultra ligero desarrollado en HTML5, CSS3 y JavaScript nativo asíncrono que consume el webhook consolidado de n8n (`/webhook/estado-global`) para renderizar el estado de los servicios en una interfaz limpia en modo oscuro.
+- **Cloudflare Tunnels (`cloudflared`):** Capa de acceso seguro hacia el exterior sin necesidad de abrir puertos en el router ni exponer IPs públicas directamente.
 
-### Monitorización
+---
 
-![Dashboard de Grafana](docs/Dashboard_Grafana.png)
+## 🤖 Flujos de Automatización en n8n (`n8n/workflows/workflows.json`)
 
-### Automatización en n8n
+Los flujos de trabajo de n8n se encuentran exportados, versionados y limpios de credenciales dentro de la carpeta del proyecto:
 
-| Workflow del radar | Respuesta al webhook | Workflow de alertas |
-|---|---|---|
-| ![Workflow del radar](docs/Workflow_Radar.png) | ![Respond to Webhook](docs/Respond_to_Webhook.png) | ![Workflow de alertas](docs/Workflow_Alertas.png) |
+- **Flujo Radar (Global Status):** Consulta periódicamente las APIs REST de múltiples proveedores cloud e infraestructura (AWS, Cloudflare, Google Cloud, GitHub, OpenAI, Discord, Atlassian, Azure) y unifica todos los estados en un único objeto JSON estructurado (`/webhook/estado-global`).
+- **Flujo de Detección RSS (Telecomunicaciones):** Monitorización automatizada de feeds RSS/XML (incluyendo Google News y fuentes especializadas del sector) mediante filtros de texto avanzados para detectar en tiempo real incidencias o caídas de operadores de red y servicios de telecomunicaciones.
+- **Flujo de Alertas Multicanal:** Sistema automatizado capaz de despachar notificaciones críticas de forma inmediata ante cualquier anomalía a través de dos canales:
+  - **Telegram:** Alertas directas al canal o chat privado.
+  - **Correo Electrónico (SMTP):** Envío automatizado de avisos detallados con el histórico de la incidencia.
+- **Bot de Telegram Interactivo:** Permite consultar el estado general del stack y abrir dashboards de forma cómoda mediante un menú interactivo con botones (`/panel`), gestionado mediante un nodo *Telegram Trigger* y un enrutador de comandos interno.
 
-## 🎯 ¿Qué es?
+---
 
-Un proyecto de extremo a extremo que demuestra habilidades de **DevOps, automatización e integración de APIs**:
-
-- **n8n** consulta APIs REST y feeds RSS/XML de AWS, Azure, Google Cloud, Cloudflare, GitHub, OpenAI, Slack, Discord, Atlassian y Google News.
-- Un nodo combinador unifica los estados en un único JSON, expuesto en `/webhook/estado-global`.
-- `radar.html` consume ese webhook y pinta el estado en tiempo real.
-- **Zabbix** monitoriza la infraestructura y **Grafana** muestra los dashboards, embebidos en el panel principal.
-- Todo se publica mediante **4 túneles Cloudflare**, con las URLs actualizadas automáticamente por un script.
-
-## 🏗️ Arquitectura
-
-```mermaid
-flowchart LR
-    subgraph Ext["Fuentes externas"]
-        F[APIs REST y RSS<br/>AWS · Azure · GCP · GitHub<br/>OpenAI · Slack · Discord ...]
-    end
-
-    subgraph Host["Mini PC · Ubuntu"]
-        subgraph Docker["Docker Compose"]
-            N8N[n8n]
-            ZDB[(MySQL)]
-            ZS[Zabbix Server]
-            ZW[Zabbix Web]
-            G[Grafana]
-            GR[Grafana Renderer]
-            NG[Nginx · PWA]
-        end
-        CF["cloudflared<br/>4 servicios systemd"]
-        SH[update-tunnels.sh]
-    end
-
-    U[👤 Usuario]
-
-    F --> N8N
-    ZS --- ZDB
-    ZW --> ZS
-    G --> ZS
-    G --- GR
-    NG -->|fetch /webhook/estado-global| N8N
-    NG -->|iframe| G
-    CF --> N8N & G & ZW & NG
-    U --> CF
-    SH -.actualiza URLs.-> NG
-    SH -.actualiza URLs.-> N8N
-```
-
-## 🤖 Bot de Telegram
-
-Un segundo flujo de n8n conecta el stack con **Telegram** para consultar y recibir avisos sin abrir ningún panel:
-
-- **Menú con botones:** el comando `/panel` muestra un mensaje con dos botones, **Estado** y **Dashboard**, para no tener que escribir comandos a mano. *Estado* devuelve un resumen con las métricas de Zabbix y *Dashboard* abre el panel de Grafana. Por debajo, un nodo *Telegram Trigger* recibe los mensajes y un enrutador de comandos decide la respuesta.
-- **Ejecuciones programadas:** un reporte diario y otro cada 5 minutos consultan la API de Zabbix (login + métricas), calculan el uso de recursos y lo comparan con un umbral crítico. Si se supera, se envía el resumen al chat.
-- **Alertas de servicios globales:** el flujo del radar avisa por Telegram cuando detecta un incidente en algún proveedor (por ejemplo, un incidente activo en Cloudflare).
-
-```mermaid
-flowchart LR
-    T[Telegram<br/>/panel + botones] --> R[Enrutador<br/>de comandos]
-    S[Reporte diario<br/>y cada 5 min] --> Z[Zabbix API<br/>login + métricas]
-    R --> Z
-    Z --> C[Cálculo de métricas<br/>y umbral]
-    C -->|supera umbral| M[Mensaje<br/>en Telegram]
-    R -->|enlace| G[Enlace a Grafana]
-```
-
-> 🔐 El token del bot y el ID del chat se guardan en las credenciales de n8n, dentro del volumen `n8n_data`, y nunca se versionan en este repositorio.
-
-## 🧰 Servicios
-
-| Servicio | Imagen | Puerto | Función |
-|---|---|---|---|
-| n8n | `n8nio/n8n` | 5678 | Automatización y webhook de estado global |
-| zabbix-db | `mysql:8.0` | – | Base de datos de Zabbix |
-| zabbix-server | `zabbix-server-mysql` 6.4 | 10051 | Recolección de métricas |
-| zabbix-web | `zabbix-web-nginx-mysql` 6.4 | 8080 | Interfaz de Zabbix |
-| grafana | `grafana-oss` | 3000 | Dashboards (plugin Zabbix) |
-| grafana-renderer | `grafana-image-renderer` | 8081 | Renderizado de paneles a imagen |
-| app | `nginx:alpine` | 8090 | Sirve la PWA (`app/`) |
-
-## ✨ Características clave
-
-- **Agregación multi-fuente** en un único endpoint JSON.
-- **Bot de Telegram:** menú `/panel` con botones (Estado y Dashboard) y alertas automáticas.
-- **Frontend sin frameworks:** HTML5, CSS3 y JavaScript nativo asíncrono.
-- **PWA instalable:** `manifest.json`, `service-worker.js` e iconos.
-- **Sin puertos abiertos en el router:** todo el acceso externo entra por túneles Cloudflare.
-- **Auto-reconfiguración:** `update-tunnels.sh` lee las URLs de los servicios `cloudflared` (vía `journalctl`), actualiza `docker-compose.yml`, `index.html` y `radar.html`, y recrea el contenedor de n8n.
-- **Persistencia** con volúmenes Docker nombrados (`n8n_data`, `zabbix_db_data`, `grafana_data`).
-
-## 📁 Estructura
+## 📂 Estructura del Repositorio
 
 ```text
-.
+radar-monitoring-stack/
 ├── app/
 │   ├── index.html            # Panel principal (enlaces + dashboards Grafana)
-│   ├── radar.html            # Radar de estado global
-│   ├── manifest.json         # Manifiesto PWA
-│   ├── service-worker.js
-│   └── icon-*.png
-├── docker-compose.example.yml  # Compose con variables de entorno
-├── .env.example                # Plantilla de variables
-├── update-tunnels.sh           # Actualización dinámica de túneles
-└── README.md
-```
-
-## 🚀 Puesta en marcha
-
-```bash
-git clone https://github.com/mllacer27-prog/radar-monitoring-stack.git ~/stack && cd ~/stack
-
-# 1. Variables de entorno
-cp .env.example .env && nano .env
-
-# 2. Compose (usa las variables del .env)
-cp docker-compose.example.yml docker-compose.yml
-docker compose up -d
-
-# 3. Instalar cloudflared y crear un servicio systemd por túnel
-#    https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
-
-# 4. Actualizar URLs
-chmod +x update-tunnels.sh && ./update-tunnels.sh
-```
-
-Después, importa tus flujos en n8n y configura tus propias credenciales.
-
-> ⚠️ `update-tunnels.sh` modifica archivos por número de línea; si editas `docker-compose.yml`, `index.html` o `radar.html`, revisa que las líneas coincidan.
-
-## 🔐 Seguridad y decisiones de diseño
-
-- Secretos fuera del repositorio (`.env` ignorado por Git; se publica solo `.env.example`).
-- Los datos de n8n (credenciales y clave de cifrado) viven en un volumen Docker y nunca se versionan.
-- Grafana tiene acceso anónimo de solo lectura (*Viewer*) de forma deliberada, para poder embeber los dashboards en el panel.
-
-## 🗺️ Mejoras futuras
-
-- [ ] Publicar los puertos solo en `127.0.0.1` (los túneles corren en el mismo host).
-- [ ] Sustituir `innerHTML` por `textContent` en `radar.html`.
-- [ ] Migrar a *Named Tunnels* con dominio propio (URL estable, sin script).
-- [ ] Automatizar la sustitución de URLs con plantillas en lugar de números de línea.
-- [ ] CI/CD con GitHub Actions.
-
-## 👤 Autor
-
-**mllacer27-prog**: DevOps · Full-Stack
-[GitHub](https://github.com/mllacer27-prog)
-
-## 📄 Licencia
-
-MIT
+│   ├── radar.html            # Radar de estado global en tiempo real
+│   ├── manifest.json         # Manifiesto para Progressive Web App (PWA)
+│   ├── service-worker.js     # Service worker para caché y offline
+│   └── icon-*.png            # Iconos de la aplicación
+├── n8n/
+│   ├── workflows/
+│   │   └── workflows.json    # Workflows exportados de n8n (purgados de secretos)
+│   └── README.md             # Documentación específica de automatizaciones
+├── docs/                     # Capturas de pantalla e imágenes de arquitectura
+│   ├── Dashboard_Grafana.png
+│   ├── Radar.png
+│   ├── Respond_to_Webhook.png
+│   ├── Vista_Principal.png
+│   ├── Workflow_Alertas.png
+│   └── Workflow_Radar.png
+├── docker-compose.example.yml # Plantilla oficial de Docker Compose
+├── .env.example              # Plantilla de variables de entorno requeridas
+├── update-tunnels.sh         # Script de actualización dinámica de túneles
+└── README.md                 # Documentación principal del proyecto
