@@ -1,0 +1,1600 @@
+[
+  {
+    "updatedAt": "2026-09-25T05:21:26.775Z",
+    "createdAt": "2026-09-18T06:49:10.161Z",
+    "id": "6scvDqiiFd6rKW5G",
+    "name": "Flujo Alertas MiniPC",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -752,
+          -112
+        ],
+        "id": "fe527528-a895-4d49-8ee0-8e12b3dfa6f2",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 8
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          -752,
+          64
+        ],
+        "id": "58903c0e-af17-474f-a609-b40502ccef43",
+        "name": "Reporte diario"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          -752,
+          224
+        ],
+        "id": "497ce5bf-1b24-4013-a158-0a800af8c1b7",
+        "name": "Reporte  5min"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://zabbix-web:8080/api_jsonrpc.php",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json-rpc"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"user.login\",\n  \"params\": {\n    \"username\": \"grafana\",\n    \"password\": \"\"\n  },\n  \"id\": 1\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -400,
+          -16
+        ],
+        "id": "aa311777-2c09-4075-9d7a-857788f8b6ba",
+        "name": "Zabbix Login (Auto)"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://zabbix-web:8080/api_jsonrpc.php",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json-rpc"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"host.get\",\n  \"params\": {\n    \"output\": [\"host\"],\n    \"selectInterfaces\": [\"ip\"]\n  },\n  \"auth\": \"{{ $json.result }}\",\n  \"id\": 2\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -128,
+          -16
+        ],
+        "id": "a6663f1c-1593-49f9-8dc2-d356e6696a8e",
+        "name": "Zabbix Get Metrics (Auto)"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "78ef7ede-92df-40f6-a2ca-12d336fe4c5c",
+                "leftValue": "={{ $json.esCritico }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          400,
+          -16
+        ],
+        "id": "a34607a2-e9a6-4180-a719-a82266d28487",
+        "name": "¿Supera Umbral Crítico?"
+      },
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.5,
+        "position": [
+          -752,
+          400
+        ],
+        "id": "171012ed-3e3a-4371-aae7-7885104cc293",
+        "name": "Recibir Comando Telegram",
+        "webhookId": "9a8c5200-1525-475c-baaa-7f324ca737e6",
+        "credentials": {
+          "telegramApi": {
+            "id": "Um9i05xdzCD422k8",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.message.text }}",
+                      "rightValue": "/estado",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "388003b8-41fb-42cf-931e-ffadd8a93407"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "9e44fdea-531d-4363-ab4d-f811113342dd",
+                      "leftValue": "={{ $json.message.text }}",
+                      "rightValue": "/panel",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -400,
+          400
+        ],
+        "id": "be04524b-5498-4e7a-87eb-4086a69dd946",
+        "name": "Enrutador de Comandos"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://zabbix-web:8080/api_jsonrpc.php",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json-rpc"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"user.login\",\n  \"params\": {\n    \"username\": \"grafana\",\n    \"password\": \"\"\n  },\n  \"id\": 1\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -128,
+          384
+        ],
+        "id": "fdc761eb-7fc4-4076-9305-58f2733af945",
+        "name": "Zabbix Login (Manual)"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://zabbix-web:8080/api_jsonrpc.php",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json-rpc"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"item.get\",\n  \"params\": {\n    \"output\": [\"name\", \"lastvalue\", \"units\", \"key_\"],\n    \"hostids\": \"10631\",\n    \"filter\": {\n      \"key_\": [\n        \"system.cpu.util\",\n        \"vm.memory.size[pavailable]\",\n        \"vfs.fs.dependent.size[/,pused]\",\n        \"vfs.fs.size[/,pused]\",\n        \"system.cpu.load[all,avg1]\",\n        \"system.cpu.load[percpu,avg1]\",\n        \"system.uptime\"\n      ]\n    }\n  },\n  \"auth\": \"{{ $json.result }}\",\n  \"id\": 2\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          160,
+          384
+        ],
+        "id": "c461dbf9-b412-476b-bf00-5cbbd309f3bb",
+        "name": "Zabbix Get Metrics (Manual)"
+      },
+      {
+        "parameters": {
+          "jsCode": "const inputData = $input.first().json;\nconst items = inputData.result || [];\n\nlet cpu = \"N/D\";\nlet ramLibre = \"N/D\";\nlet discoUsado = \"N/D\";\nlet cargaSistema = \"N/D\";\nlet uptimeStr = \"N/D\";\n\nlet cpuNum = 0;\nlet ramNum = 0;\nlet discoNum = 0;\n\nitems.forEach(item => {\n  const val = parseFloat(item.lastvalue);\n  const key = item.key_ || \"\";\n\n  if (key === \"system.cpu.util\") {\n    cpuNum = !isNaN(val) ? val : 0;\n    cpu = !isNaN(val) ? val.toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key === \"vm.memory.size[pavailable]\") {\n    ramNum = !isNaN(val) ? (100 - val) : 0;\n    ramLibre = !isNaN(val) ? (100 - val).toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key.includes(\"vfs.fs.\") && key.includes(\"/,pused\")) {\n    discoNum = !isNaN(val) ? val : 0;\n    discoUsado = !isNaN(val) ? val.toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key.includes(\"system.cpu.load\")) {\n    cargaSistema = !isNaN(val) ? val.toFixed(2) : item.lastvalue;\n  } else if (key === \"system.uptime\") {\n    if (!isNaN(val)) {\n      const dias = Math.floor(val / 86400);\n      const horas = Math.floor((val % 86400) / 3600);\n      const mins = Math.floor((val % 3600) / 60);\n      uptimeStr = `${dias}d ${horas}h ${mins}m`;\n    }\n  }\n});\n\n// Función para determinar el emoji según el porcentaje\nfunction getEmoji(val) {\n  if (val >= 80) return \"🔴\";\n  if (val >= 60) return \"🟡\";\n  return \"🟢\";\n}\n\nconst emojiCpu = getEmoji(cpuNum);\nconst emojiRam = getEmoji(ramNum);\nconst emojiDisco = getEmoji(discoNum);\n\n// Evalúa si supera el umbral crítico\nconst esCritico = cpuNum > 80 || ramNum > 80;\n\nconst mensaje = `💻 *ESTADO DEL MINIPC*\n\n${emojiCpu} *Uso de CPU:* ${cpu}\n${emojiRam} *Uso de RAM:* ${ramLibre}\n${emojiDisco} *Disco Principal (/):* ${discoUsado} usado\n⚡ *Carga del sistema (1m):* ${cargaSistema}\n⏱️ *Tiempo encendido:* ${uptimeStr}`;\n\nreturn [{ json: { esCritico, mensaje } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          384
+        ],
+        "id": "ce1ec54f-9e10-4eee-a73f-891446b01e35",
+        "name": "Formatear Reporte Manual"
+      },
+      {
+        "parameters": {
+          "chatId": "-1004292684168",
+          "text": "={{ $json.mensaje }}",
+          "replyMarkup": "=inlineKeyboard",
+          "forceReply": {},
+          "inlineKeyboard": {
+            "rows": [
+              {
+                "row": {
+                  "buttons": [
+                    {
+                      "text": "=📊 Ver Dashboard Grafana",
+                      "additionalFields": {
+                        "url": "https://happy-alleged-michel-tag.trycloudflare.com/d/adppndj/dsm"
+                      }
+                    },
+                    {
+                      "text": "🔄 Actualizar Estado",
+                      "additionalFields": {
+                        "callback_data": "/estado"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "replyKeyboardOptions": {},
+          "replyKeyboardRemove": {},
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          624,
+          176
+        ],
+        "id": "0983eeae-c87a-4256-8f10-1de5aa81a341",
+        "name": "Enviar Resumen /estado",
+        "webhookId": "b21ea2f3-9861-4523-b5f1-708e0f668333",
+        "credentials": {
+          "telegramApi": {
+            "id": "Um9i05xdzCD422k8",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "chatId": "-1004292684168",
+          "text": "=📊 *Acceso al Dashboard de Grafana*\n\nPuedes visualizar las métricas en tiempo real aquí:\nhttps://happy-alleged-michel-tag.trycloudflare.com/d/adppndj/dsm",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          -272,
+          192
+        ],
+        "id": "1bbf1fd5-743d-4c71-95a3-0c7c6c79f38c",
+        "name": "Enviar Enlace Grafana",
+        "webhookId": "b21ea2f3-9861-4523-b5f1-708e0f668333",
+        "credentials": {
+          "telegramApi": {
+            "id": "Um9i05xdzCD422k8",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const inputData = $input.first().json;\nconst items = inputData.result || [];\n\nlet cpu = \"N/D\", ramLibre = \"N/D\", discoUsado = \"N/D\", cargaSistema = \"N/D\", uptimeStr = \"N/D\";\nlet cpuNum = 0, ramNum = 0, discoNum = 0;\n\nitems.forEach(item => {\n  const val = parseFloat(item.lastvalue);\n  const key = item.key_ || \"\";\n\n  if (key === \"system.cpu.util\") {\n    cpuNum = !isNaN(val) ? val : 0;\n    cpu = !isNaN(val) ? val.toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key === \"vm.memory.size[pavailable]\") {\n    ramNum = !isNaN(val) ? (100 - val) : 0;\n    ramLibre = !isNaN(val) ? (100 - val).toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key.includes(\"vfs.fs.\") && key.includes(\"/,pused\")) {\n    discoNum = !isNaN(val) ? val : 0;\n    discoUsado = !isNaN(val) ? val.toFixed(2) + \"%\" : item.lastvalue;\n  } else if (key.includes(\"system.cpu.load\")) {\n    cargaSistema = !isNaN(val) ? val.toFixed(2) : item.lastvalue;\n  } else if (key === \"system.uptime\") {\n    if (!isNaN(val)) {\n      const dias = Math.floor(val / 86400);\n      const horas = Math.floor((val % 86400) / 3600);\n      const mins = Math.floor((val % 3600) / 60);\n      uptimeStr = `${dias}d ${horas}h ${mins}m`;\n    }\n  }\n});\n\nfunction getEmoji(val) {\n  if (val >= 80) return \"🔴\";\n  if (val >= 60) return \"🟡\";\n  return \"🟢\";\n}\n\nconst emojiCpu = getEmoji(cpuNum);\nconst emojiRam = getEmoji(ramNum);\nconst emojiDisco = getEmoji(discoNum);\n\n// Evaluación de límites críticos (CPU > 80%, RAM > 80% o Disco > 85%)\nconst esCriticoActual = cpuNum > 80 || ramNum > 80 || discoNum > 85;\n\n// Estado previo guardado en n8n estático\nconst staticData = $getWorkflowStaticData('global');\nconst estuvoCritico = staticData.estuvoCritico || false;\n\nlet enviarNotificacion = false;\nlet encabezado = \"\";\n\nif (esCriticoActual) {\n  enviarNotificacion = true;\n  encabezado = \"🚨 *ALERTA CRÍTICA DETECTADA* 🚨\";\n  staticData.estuvoCritico = true;\n} else if (estuvoCritico && !esCriticoActual) {\n  enviarNotificacion = true;\n  encabezado = \"🟢 *SISTEMA NORMALIZADO / RECUPERADO* 🟢\";\n  staticData.estuvoCritico = false;\n}\n\nconst mensaje = `${encabezado}\n\n${emojiCpu} *Uso de CPU:* ${cpu}\n${emojiRam} *Uso de RAM:* ${ramLibre}\n${emojiDisco} *Disco Principal (/):* ${discoUsado} usado\n⚡ *Carga del sistema (1m):* ${cargaSistema}\n⏱️ *Tiempo encendido:* ${uptimeStr}`;\n\nreturn [{ json: { esCritico: enviarNotificacion, mensaje } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          144,
+          -16
+        ],
+        "id": "8b8abc29-5eef-49ce-85f3-304cc73bcb08",
+        "name": "Calcular Métricas y Umbral."
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Login (Auto)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reporte diario": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Login (Auto)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reporte  5min": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Login (Auto)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zabbix Login (Auto)": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Get Metrics (Auto)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zabbix Get Metrics (Auto)": {
+        "main": [
+          [
+            {
+              "node": "Calcular Métricas y Umbral.",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Supera Umbral Crítico?": {
+        "main": [
+          [
+            {
+              "node": "Enviar Resumen /estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Recibir Comando Telegram": {
+        "main": [
+          [
+            {
+              "node": "Enrutador de Comandos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enrutador de Comandos": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Login (Manual)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Enviar Enlace Grafana",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zabbix Login (Manual)": {
+        "main": [
+          [
+            {
+              "node": "Zabbix Get Metrics (Manual)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Zabbix Get Metrics (Manual)": {
+        "main": [
+          [
+            {
+              "node": "Formatear Reporte Manual",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Formatear Reporte Manual": {
+        "main": [
+          [
+            {
+              "node": "Enviar Resumen /estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calcular Métricas y Umbral.": {
+        "main": [
+          [
+            {
+              "node": "¿Supera Umbral Crítico?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": [
+          null
+        ],
+        "recurrenceRuleSignatures": [
+          null
+        ]
+      },
+      "node:Reporte diario": {
+        "recurrenceRules": [
+          null
+        ],
+        "recurrenceRuleSignatures": [
+          null
+        ]
+      },
+      "node:Reporte  5min": {
+        "recurrenceRules": [
+          null
+        ],
+        "recurrenceRuleSignatures": [
+          null
+        ]
+      },
+      "global": {
+        "estuvoCritico": false
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "44f7b544-d367-4b1b-a877-7ac1f46d23ac",
+    "activeVersionId": "44f7b544-d367-4b1b-a877-7ac1f46d23ac",
+    "versionCounter": 329,
+    "triggerCount": 3,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-09-18T06:49:10.166Z",
+        "createdAt": "2026-09-18T06:49:10.166Z",
+        "role": "workflow:owner",
+        "workflowId": "6scvDqiiFd6rKW5G",
+        "projectId": "3KRZMFILE6Kbl9Vk",
+        "project": {
+          "updatedAt": "2026-09-17T08:46:44.290Z",
+          "createdAt": "2026-09-17T08:23:32.862Z",
+          "id": "3KRZMFILE6Kbl9Vk",
+          "name": "Leu Gim <user>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "365077d1-9182-4b74-938f-26ec20b20ae5"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version 5",
+      "description": ""
+    }
+  },
+  {
+    "updatedAt": "2026-09-25T05:47:15.667Z",
+    "createdAt": "2026-09-21T05:54:46.531Z",
+    "id": "57RmFOW3dL5lWan8",
+    "name": "Radar Caídas Globales",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          -80,
+          -96
+        ],
+        "id": "5828fac6-66e5-4515-8bbc-2f0f7da63425",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "url": "https://www.cloudflarestatus.com/api/v2/status.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          -624
+        ],
+        "id": "ee6d3c90-5737-448f-abe6-90faced3f239",
+        "name": "Cloudflare HTTP Request "
+      },
+      {
+        "parameters": {
+          "url": "https://status.aws.amazon.com/data.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          -736
+        ],
+        "id": "a68191d0-d6fa-4ab8-8563-c14d27c6fcfd",
+        "name": "Aws HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const ahora = Date.now();\nconst ventanaMs = 60 * 60 * 1000; // última hora\n\nlet incidentesActivos = [];\n\n// $input.all() nos da TODOS los items (cada uno es un evento/incidente distinto)\nconst items = $input.all();\n\nitems.forEach(entrada => {\n  const evento = entrada.json;\n  \n  if (!evento.event_log || evento.event_log.length === 0) return;\n  \n  const ultimoLog = evento.event_log[evento.event_log.length - 1];\n  const timestampMs = ultimoLog.timestamp > 9999999999 \n    ? ultimoLog.timestamp \n    : ultimoLog.timestamp * 1000;\n\n  const esReciente = (ahora - timestampMs) < ventanaMs;\n  const pareceResuelto = /restored|resolved|recovered|normal operations/i.test(ultimoLog.message || \"\");\n\n  if (esReciente && !pareceResuelto) {\n    incidentesActivos.push({\n      region: evento.region_name,\n      resumen: evento.summary,\n      ultimoMensaje: ultimoLog.summary\n    });\n  }\n});\n\nreturn [{ json: { proveedor: \"AWS\", incidentesActivos, hayIncidente: incidentesActivos.length > 0 } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          -736
+        ],
+        "id": "184475e5-9f9d-480b-9699-fac42539f3b9",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst indicator = data.status.indicator;\nconst descripcion = data.status.description;\n\n// none = todo bien. minor/major/critical = hay problema\nconst hayIncidente = indicator !== \"none\";\n\nreturn [{ \n  json: { \n    proveedor: \"Cloudflare\", \n    hayIncidente, \n    gravedad: indicator, \n    descripcion \n  } \n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          -624
+        ],
+        "id": "ab6e2bb1-b4e9-4fe1-9602-d60b34b57042",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "numberInputs": 10
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          768,
+          -208
+        ],
+        "id": "1e53b47f-78f8-47b1-a128-c87ca73edb03",
+        "name": "Merge"
+      },
+      {
+        "parameters": {
+          "jsCode": "const allItems = $input.all();\n\n// Mapeo unificado para corregir nombres dispares (ej. Azure vs Microsoft Azure)\nconst nombresFijos = [\n  \"AWS\", \"Cloudflare\", \"Google Cloud\", \"GitHub\",\n  \"OpenAI\", \"Slack\", \"Discord\", \"Atlassian\", \"Azure\", \"Google News\"\n];\n\nconst proveedoresReales = [\"AWS\", \"Cloudflare\", \"Google Cloud\", \"GitHub\", \"OpenAI\", \"Slack\", \"Discord\", \"Atlassian\", \"Azure\", \"Google News\"];\n\nlet listaServicios = nombresFijos.map(nombreFijo => {\n  // Buscar coincidencia flexible por proveedor o nombre (normalizando texto)\n  const item = allItems.find(i => {\n    const p = (i.json.proveedor || i.json.nombre || \"\").toLowerCase();\n    const target = nombreFijo.toLowerCase();\n    return p.includes(target) || target.includes(p);\n  });\n\n  if (!item) {\n    return { nombre: nombreFijo, estado: \"⚪ No monitorizado\" };\n  }\n\n  if (!proveedoresReales.includes(nombreFijo)) {\n    // Si el nodo de entrada ya trae un estado predefinido, úsalo; si no, pon el placeholder\n    const estadoEntrada = item.json.estado;\n    if (estadoEntrada) {\n      return { nombre: nombreFijo, estado: estadoEntrada };\n    }\n    return { nombre: nombreFijo, estado: \"⚠️ Placeholder (sin conectar aún)\" };\n  }\n\n  const hayIncidente = item.json.hayIncidente === true;\n  return {\n    nombre: nombreFijo,\n    estado: hayIncidente ? \"🔴 Incidente activo\" : \"🟢 Operativo\"\n  };\n});\n\nconst hayAlertas = listaServicios.some(s => s.estado.includes(\"🔴\"));\nconst incidentesTexto = listaServicios\n  .filter(s => s.estado.includes(\"🔴\"))\n  .map(s => `🟠 ${s.nombre}`)\n  .join(\"\\n\");\n\nconst mensaje = hayAlertas\n  ? `🌐 ALERTA DE SERVICIOS GLOBALES\\n\\n${incidentesTexto}`\n  : \"✅ Todos los servicios operativos\";\n\nreturn [{ json: { servicios: listaServicios, hayAlertas, mensaje } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          928,
+          -80
+        ],
+        "id": "889f31df-708e-4ed8-bf65-38a26d7bd659",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "fbacd11e-80a7-4ef5-bd7c-731fbc3b4110",
+                "leftValue": "={{ $json.hayAlertas }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1232,
+          -80
+        ],
+        "id": "a1d1ec88-f1ba-4eae-8595-ff752e3c37f9",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "chatId": "-1004292684168",
+          "text": "={{ $json.mensaje }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.2,
+        "position": [
+          1488,
+          -96
+        ],
+        "id": "bba243de-73ab-4734-8a43-ff6e3811602c",
+        "name": "Send a text message",
+        "webhookId": "5b0e2e5e-97a0-45c7-8e84-0caab4e57db8",
+        "credentials": {
+          "telegramApi": {
+            "id": "Um9i05xdzCD422k8",
+            "name": "Telegram account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "path": "estado-global",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          208,
+          -480
+        ],
+        "id": "c90e53a9-59a6-4594-b0d7-9cc8eea5d37c",
+        "name": "Webhook",
+        "webhookId": "c0da669e-755e-4be6-9584-6cb8284ba560"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1072,
+          -80
+        ],
+        "id": "90816a66-0318-4e95-bc9e-5c2a0c8b395a",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "url": "https://status.cloud.google.com/incidents.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          -352
+        ],
+        "id": "f30840b4-08cd-484f-9900-ac92ee1cd714",
+        "name": "Google Cloud HTTP Request "
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst ahora = Date.now();\nconst ventanaMs = 60 * 60 * 1000; // última hora\n\nlet incidentesActivos = [];\n\nitems.forEach(entrada => {\n  const inc = entrada.json;\n\n  // Si no tiene fecha de \"end\", el incidente sigue abierto\n  if (!inc.end) {\n    incidentesActivos.push({ resumen: inc.external_desc, producto: inc.service_name });\n    return;\n  }\n\n  const finMs = new Date(inc.end).getTime();\n  const esReciente = (ahora - finMs) < ventanaMs;\n\n  if (esReciente) {\n    incidentesActivos.push({ resumen: inc.external_desc, producto: inc.service_name });\n  }\n});\n\nreturn [{ json: { proveedor: \"Google Cloud\", incidentesActivos, hayIncidente: incidentesActivos.length > 0 } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          -352
+        ],
+        "id": "51e5485f-2699-4910-9a21-c0d66e1f388a",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst indicator = data.status.indicator;\nreturn [{ json: { proveedor: \"GitHub\", hayIncidente: indicator !== \"none\", gravedad: indicator, descripcion: data.status.description } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          -96
+        ],
+        "id": "9e57b29a-6624-4474-9144-8add154a76c0",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "url": "https://www.githubstatus.com/api/v2/status.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          -96
+        ],
+        "id": "f24de7fa-34f8-4f10-90ae-eab7baf28698",
+        "name": "Git Hub HTTP Request "
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst indicator = data.status.indicator;\nreturn [{ json: { proveedor: \"OpenAI\", hayIncidente: indicator !== \"none\", gravedad: indicator, descripcion: data.status.description } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          32
+        ],
+        "id": "2c704094-5a54-4820-a192-521fe41dfde3",
+        "name": "Code in JavaScript5"
+      },
+      {
+        "parameters": {
+          "url": "https://status.openai.com/api/v2/status.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          32
+        ],
+        "id": "aad47d16-1ea3-4dac-8192-9fbcf16267ce",
+        "name": "OpenAI HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "try {\n  const data = $input.first().json;\n  // Slack devuelve un array de incidentes activos si los hay\n  const incidentes = data.active_incidents || [];\n  const hayIncidente = incidentes.length > 0;\n  const descripcion = hayIncidente ? (incidentes[0].title || \"Incidente activo en Slack\") : \"Operativo\";\n\n  return [{ \n    json: { \n      proveedor: \"Slack\", \n      hayIncidente: hayIncidente, \n      descripcion: descripcion \n    } \n  }];\n} catch (error) {\n  return [{ \n    json: { \n      proveedor: \"Slack\", \n      hayIncidente: false, \n      descripcion: \"Operativo\" \n    } \n  }];\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          160
+        ],
+        "id": "54b71baf-ecde-4c4e-80e6-93b62a88acd3",
+        "name": "Code in JavaScript6"
+      },
+      {
+        "parameters": {
+          "url": "https://status.slack.com/",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          160
+        ],
+        "id": "4ce1a021-cbd9-489d-a50f-516fdd3bc6df",
+        "name": "Slack HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst indicator = data.status.indicator;\nreturn [{ json: { proveedor: \"Discord\", hayIncidente: indicator !== \"none\", gravedad: indicator, descripcion: data.status.description } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          288
+        ],
+        "id": "f2bf5186-e8cc-4a99-baaa-5a13ed96e546",
+        "name": "Code in JavaScript7"
+      },
+      {
+        "parameters": {
+          "url": "https://discordstatus.com/api/v2/status.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          288
+        ],
+        "id": "b9af993e-54e6-4218-b135-41307a410191",
+        "name": "Discord HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst indicator = data.status.indicator;\nreturn [{ json: { proveedor: \"Atlassian\", hayIncidente: indicator !== \"none\", gravedad: indicator, descripcion: data.status.description } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          384,
+          416
+        ],
+        "id": "0a256cca-3bb9-42ea-bcd6-d8ae0b122c87",
+        "name": "Code in JavaScript8"
+      },
+      {
+        "parameters": {
+          "url": "https://status.atlassian.com/api/v2/status.json",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          416
+        ],
+        "id": "9d7fc899-aa4c-4d53-9a74-4d58acbef6dd",
+        "name": "Altassian HTTP Request"
+      },
+      {
+        "parameters": {
+          "url": "https://azure.status.microsoft/en-us/status/feed/",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          544
+        ],
+        "id": "009eddff-a076-4a7a-91b6-d7250f4a7fc1",
+        "name": "Azure HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "try {\n  const json = $input.first().json;\n  \n  // Buscamos los items de forma segura sin importar si varían las mayúsculas o la ruta\n  const channel = json?.rss?.channel || json?.feed;\n  const items = channel?.item || channel?.entry || [];\n  const primerItem = Array.isArray(items) ? items[0] : items;\n\n  // Extraemos el título de forma robusta\n  let titulo = \"Sin datos recientes\";\n  if (primerItem) {\n    if (typeof primerItem.title === 'string') {\n      titulo = primerItem.title;\n    } else if (Array.isArray(primerItem.title)) {\n      titulo = primerItem.title[0];\n    } else if (primerItem.title?._) {\n      titulo = primerItem.title._;\n    }\n  }\n\n  // Detectamos si hay incidencias en el texto\n  const textoLower = String(titulo).toLowerCase();\n  const hayIncidente = textoLower.includes(\"active\") || \n                       textoLower.includes(\"incident\") || \n                       textoLower.includes(\"degraded\") ||\n                       textoLower.includes(\"outage\");\n\n  return [{ \n    json: { \n      proveedor: \"Azure\", \n      hayIncidente: hayIncidente, \n      descripcion: titulo \n    } \n  }];\n} catch (error) {\n  return [{ \n    json: { \n      proveedor: \"Azure\", \n      hayIncidente: false, \n      descripcion: \"Error al leer feed: \" + error.message \n    } \n  }];\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          592,
+          544
+        ],
+        "id": "e12d0881-a3b3-4897-a5e8-69e26fd67622",
+        "name": "Code in JavaScript9"
+      },
+      {
+        "parameters": {
+          "url": "https://news.google.com/rss/search?q=(ca%C3%ADda+OR+cae+OR+outage+OR+down)+(Movistar+OR+Vodafone+OR+Orange+OR+Verizon+OR+T-Mobile+OR+Telefonica+OR+ATT)&hl=es&gl=ES&ceid=ES:es",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          208,
+          672
+        ],
+        "id": "563cf6c7-31d5-4392-9ecb-964b6c100878",
+        "name": "Google News RSS HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.first().json.rss.channel.item;\nconst ahora = Date.now();\nconst ventanaMs = 6 * 60 * 60 * 1000; // últimas 6 horas\n\n// Palabras que indican un incidente REAL de servicio\nconst palabrasIncidente = /sin (internet|servicio|cobertura|conexión|teléfono|móvil)|caída (masiva|nacional|de red|en toda españa)|no funciona|apagón|sin luz|corte de (cable|fibra)|incidencia (general|nacional)/i;\n\n// Palabras que indican que es ruido (bolsa, deportes, entretenimiento) a excluir aunque contengan \"cae\"\nconst palabrasRuido = /acción|bolsa|dividendo|cotiza|inversores|nasdaq|deportivo|baloncesto|vuelta|equipo|serie|película|catálogo|plus\\+/i;\n\nlet incidentesReales = [];\n\nitems.forEach(item => {\n  const titulo = item.title || \"\";\n  const fechaMs = new Date(item.pubDate).getTime();\n  const esReciente = (ahora - fechaMs) < ventanaMs;\n\n  if (esReciente && palabrasIncidente.test(titulo) && !palabrasRuido.test(titulo)) {\n    incidentesReales.push({\n      titular: titulo,\n      fuente: item.source?._  || \"Google News\",\n      fecha: item.pubDate\n    });\n  }\n});\n\nreturn [{\n  json: {\n    proveedor: \"Telecom News\",\n    hayIncidente: incidentesReales.length > 0,\n    incidentesActivos: incidentesReales\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          592,
+          672
+        ],
+        "id": "8a4101d4-1621-4986-a069-f288c5cba635",
+        "name": "Code in JavaScript10"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          768,
+          192
+        ],
+        "id": "57a03127-7685-4d89-8efb-9687ae6a67c1",
+        "name": "Merge 2"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.xml",
+        "typeVersion": 1,
+        "position": [
+          384,
+          544
+        ],
+        "id": "aca5237a-b1c7-4695-bc38-cb6849633796",
+        "name": "XML"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.xml",
+        "typeVersion": 1,
+        "position": [
+          384,
+          672
+        ],
+        "id": "4d1498ee-b4e1-4976-ac7a-06495c0d5b63",
+        "name": "XML1"
+      },
+      {
+        "parameters": {
+          "fromEmail": "user.com",
+          "toEmail": "user.com",
+          "subject": "🚨 RADAR: Alerta de caída en servicios globales detectada\n",
+          "html": "={{ $json.mensaje }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          1488,
+          -240
+        ],
+        "id": "e82ebbb2-4b10-4947-9052-90d895ce7ee2",
+        "name": "Send an Email",
+        "webhookId": "5b0a50c3-3161-4864-9bb9-626ba81ec2b4",
+        "credentials": {
+          "smtp": {
+            "id": "LkQQrCQiaJfaBE8Q",
+            "name": "SMTP account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Cloudflare HTTP Request ",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Aws HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Google Cloud HTTP Request ",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Git Hub HTTP Request ",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "OpenAI HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Slack HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Discord HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Altassian HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Azure HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Google News RSS HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cloudflare HTTP Request ": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aws HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Send a text message",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Send an Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Cloud HTTP Request ": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 3
+            }
+          ]
+        ]
+      },
+      "Git Hub HTTP Request ": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 4
+            }
+          ]
+        ]
+      },
+      "OpenAI HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Slack HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Discord HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Altassian HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 5
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript6": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 6
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript7": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 7
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript8": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 8
+            }
+          ]
+        ]
+      },
+      "Azure HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "XML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google News RSS HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "XML1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript9": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 9
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript10": {
+        "main": [
+          [
+            {
+              "node": "Merge 2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge 2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "XML": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "XML1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": [
+          null
+        ],
+        "recurrenceRuleSignatures": [
+          null
+        ]
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "dbfe1871-cdb6-4158-a084-bedba6d005d1",
+    "activeVersionId": "dbfe1871-cdb6-4158-a084-bedba6d005d1",
+    "versionCounter": 390,
+    "triggerCount": 2,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-09-21T05:54:46.535Z",
+        "createdAt": "2026-09-21T05:54:46.535Z",
+        "role": "workflow:owner",
+        "workflowId": "57RmFOW3dL5lWan8",
+        "projectId": "3KRZMFILE6Kbl9Vk",
+        "project": {
+          "updatedAt": "2026-09-17T08:46:44.290Z",
+          "createdAt": "2026-09-17T08:23:32.862Z",
+          "id": "3KRZMFILE6Kbl9Vk",
+          "name": "Leu Gim <user>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "365077d1-9182-4b74-938f-26ec20b20ae5"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version 5.0",
+      "description": ""
+    }
+  },
+  {
+    "updatedAt": "2026-09-24T11:48:16.742Z",
+    "createdAt": "2026-09-24T11:46:50.581Z",
+    "id": "iBsw2hbtaukaKcwp",
+    "name": "My workflow",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.rssFeedReadTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "9abb5196-961d-438f-9c1e-f8298112a709",
+        "name": "RSS Feed Trigger"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "041e69a1-0046-4a0e-99a4-e307edc318bf",
+                "leftValue": "",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          224,
+          0
+        ],
+        "id": "7e1436eb-bbbc-42bc-80f1-a76b16fafc1c",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "RSS Feed Trigger": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "binaryMode": "separate"
+    },
+    "staticData": null,
+    "meta": null,
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "d7fabc90-ad39-4709-b617-ae9ee738e2b1",
+    "activeVersionId": null,
+    "versionCounter": 2,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-09-24T11:46:50.584Z",
+        "createdAt": "2026-09-24T11:46:50.584Z",
+        "role": "workflow:owner",
+        "workflowId": "iBsw2hbtaukaKcwp",
+        "projectId": "3KRZMFILE6Kbl9Vk",
+        "project": {
+          "updatedAt": "2026-09-17T08:46:44.290Z",
+          "createdAt": "2026-09-17T08:23:32.862Z",
+          "id": "3KRZMFILE6Kbl9Vk",
+          "name": "Leu Gim <user>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "365077d1-9182-4b74-938f-26ec20b20ae5"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": null,
+      "description": null
+    }
+  }
+]
